@@ -79,8 +79,7 @@ const Operations = {
         return state;
     },
     LogClick: item => state => {
-        state.selected = fp.flatten(state.near_earth_objects.map(neo => fp.filter(obj => obj.name === item)(neo.objects)))
-        console.log(state);
+        state.selected = fp.flatten(state.near_earth_objects.map(neo => fp.filter(obj => obj.name === item)(neo.objects)));
         return state;
     }
 }
@@ -133,7 +132,6 @@ function view(state$) {
 function main(sources) {
     const intents = intent(sources.DOM, sources.HTTP);
     const state$ = model(intents);
-    console.log(state$);
     const vdom$ = view(state$);
     return {
         DOM: vdom$,
