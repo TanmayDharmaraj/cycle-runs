@@ -108,7 +108,7 @@ function view(state$) {
         selected: []
     }).map(item =>
         div('.container', [
-            div('.col-xs-6', item.near_earth_objects.map(i =>
+            div('.col-xs-6', {style: {height: "90%", "overflow-y": 'scroll'}}, item.near_earth_objects.map(i =>
                 div([
                     h1(i.date),
                     ul(i.objects.map(obj => li('.list', [
@@ -143,8 +143,8 @@ function view(state$) {
                     ])
                 ])
             )),
-            div('.col-xs-12', [
-                button(".load-more", "Load More")
+            div('.col-xs-12.text-center',{style:{"padding-top":"50px"}}, [
+                button(".btn.btn-info.load-more", "Load More")
             ])
         ])
     )
