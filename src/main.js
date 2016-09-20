@@ -15,6 +15,7 @@ import {
     ul,
     li,
     div,
+    p,
     span,
     makeDOMDriver
 } from '@cycle/dom';
@@ -80,6 +81,7 @@ const Operations = {
     },
     LogClick: item => state => {
         state.selected = fp.flatten(state.near_earth_objects.map(neo => fp.filter(obj => obj.name === item)(neo.objects)));
+        console.log(state.selected)
         return state;
     }
 }
@@ -109,16 +111,35 @@ function view(state$) {
             div('.col-xs-6', item.near_earth_objects.map(i =>
                 div([
                     h1(i.date),
-                    ul(i.objects.map(obj => li('.list', obj.name)))
+                    ul(i.objects.map(obj => li('.list', [
+                      span(obj.name),
+                      obj.is_potentially_hazardous_asteroid === true ? span('.label.label-danger', "danger") : null
+                    ])))
                 ])
             )),
-            div('.col-xs-6', item.selected.map(i =>
-                div('.well-lg', [
-                    div('.col-xs-5',[
-                        a('.lead', { props: { href: i.nasa_jpl_url, target: "_blank" } }, i.name),
+            div('.well.col-xs-6', item.selected.map(i =>
+                div([
+                    div('.col-xs-12.text-center', [
+                        a('.lead', {
+                            props: {
+                                href: i.nasa_jpl_url,
+                                target: "_blank"
+                            }
+                        }, i.name),
                     ]),
-                    div('.col-xs-9', [
-                        i.is_potentially_hazardous_asteroid === true ? span('.label.label-danger', "danger") : null
+                    div('.col-xs-12.lead', [
+                        span('.col-xs-8', "absolute_magnitude_h"),
+                        span('.col-xs-4', i.absolute_magnitude_h)
+                    ]),
+                    div('.col-xs-12.lead', [
+                        p('.col-xs-8', "estimated_diameter (Kms.)"),
+                        p('.col-xs-4', +i.estimated_diameter.kilometers.estimated_diameter_max.toFixed(2) + " (Max.)" + +i.estimated_diameter.kilometers.estimated_diameter_min.toFixed(2) + " (Min.)")
+                    ]),
+                    div('.col-xs-12.lead', [
+                        p('.col-xs-12', i.close_approach_data.map(c=>p(
+                          'Approaching ' + c.orbiting_body +' on ' + c.close_approach_date + ' with a relative velocity of ' + c.relative_velocity.kilometers_per_hour +
+                          '. It will miss ' + c.orbiting_body + ' by ' + c.miss_distance.kilometers + " kms."
+                        )))
                     ])
                 ])
             )),
