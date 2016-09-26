@@ -1,31 +1,13 @@
 import moment from 'moment';
 import Rx from 'rxjs/Rx';
 import fp from 'lodash/fp';
-import {
-    run
-} from '@cycle/rxjs-run';
-import {
-    button,
-    label,
-    input,
-    hr,
-    h1,
-    h4,
-    a,
-    ul,
-    li,
-    div,
-    p,
-    span,
-    makeDOMDriver
-} from '@cycle/dom';
-import {
-    makeHTTPDriver
-} from '@cycle/http'
+import { run } from '@cycle/rxjs-run';
+import {button, input, h1, a, ul, li, div, p, span, makeDOMDriver} from '@cycle/dom';
+import { makeHTTPDriver } from '@cycle/http'
 
 function intent(domSource, httpSource) {
-    const api_key = "u2vG0kjPYDtV17N1eBzhHY7ft1llEU7TePHmTDgG";
-    var getDataFromNasa = function() {
+    const api_key = "DEMO_KEY";
+    let getDataFromNasa = function() {
         const action$ = domSource.select('.load-more').events('click').mapTo(+7)
         const request$ = action$.startWith({
             start: moment().format("YYYY-MM-DD"),
@@ -39,12 +21,10 @@ function intent(domSource, httpSource) {
                 start: formatted_start,
                 end: formatted_end
             }
-        }).map(i => {
-            return {
+        }).map(i => ({
                 url: "https://api.nasa.gov/neo/rest/v1/feed?start_date=" + i.start + "&end_date=" + i.end + "&api_key=" + api_key,
                 method: "GET"
-            }
-        });
+        }));
 
         const response$$ = httpSource.filter(x$ => x$.url.indexOf("https://api.nasa.gov/neo/rest/v1/feed") != -1).select(response$$);
         const response$ = response$$.switch(); //flatten the stream
@@ -52,26 +32,21 @@ function intent(domSource, httpSource) {
             return response.body
         }).map(nasa =>
             fp.toPairs(nasa.near_earth_objects)
-            .map(obj => {
-                return {
+            .map(obj => ({
                     date: obj[0],
                     objects: obj[1]
-                }
-            })
+            }))
         )
         return {
-            response: response,
-            request$: request$
+            response,
+            request$
         }
     }();
 
-    var getItemInfo = domSource.select('.list').events('click')
+    let getItemInfo = domSource.select('.list').events('click')
         .map(evt => evt.target.innerHTML);
 
-    return {
-        getDataFromNasa: getDataFromNasa,
-        getItemInfo: getItemInfo
-    }
+    return { getDataFromNasa, getItemInfo }
 }
 
 const Operations = {
@@ -81,21 +56,18 @@ const Operations = {
     },
     LogClick: item => state => {
         state.selected = fp.flatten(state.near_earth_objects.map(neo => fp.filter(obj => obj.name === item)(neo.objects)));
-        console.log(state.selected)
         return state;
     }
 }
 
 function model(intents) {
-    var getData = intents.getDataFromNasa.response.map(item => Operations.AddItem(item));
+    let getData = intents.getDataFromNasa.response.map(item => Operations.AddItem(item));
 
-    var getListItemClick = intents.getItemInfo.map(item => Operations.LogClick(item))
+    let getListItemClick = intents.getItemInfo.map(item => Operations.LogClick(item))
 
-    var allOperations$ = Rx.Observable.merge(getData, getListItemClick);
+    let allOperations$ = Rx.Observable.merge(getData, getListItemClick);
 
-    var state$ = allOperations$.scan((state, operation) => {
-        return operation(state)
-    }, {
+    let state$ = allOperations$.scan((state, operation) => operation(state), {
         near_earth_objects: [],
         selected: []
     })
@@ -133,12 +105,11 @@ function view(state$) {
                     ]),
                     div('.col-xs-12.lead', [
                         p('.col-xs-8', "estimated_diameter (Kms.)"),
-                        p('.col-xs-4', +i.estimated_diameter.kilometers.estimated_diameter_max.toFixed(2) + " (Max.)" + +i.estimated_diameter.kilometers.estimated_diameter_min.toFixed(2) + " (Min.)")
+                        p('.col-xs-4', `${i.estimated_diameter.kilometers.estimated_diameter_max.toFixed(2)} (Max.) ${i.estimated_diameter.kilometers.estimated_diameter_min.toFixed(2)} (Min.)`)
                     ]),
                     div('.col-xs-12.lead', [
                         p('.col-xs-12', i.close_approach_data.map(c=>p(
-                          'Approaching ' + c.orbiting_body +' on ' + c.close_approach_date + ' with a relative velocity of ' + c.relative_velocity.kilometers_per_hour +
-                          '. It will miss ' + c.orbiting_body + ' by ' + c.miss_distance.kilometers + " kms."
+                          `Approaching ${c.orbiting_body} on ${c.close_approach_date} with a relative velocity of ${c.relative_velocity.kilometers_per_hour}. It will miss ${c.orbiting_body} by ${c.miss_distance.kilometers} kms.`
                         )))
                     ])
                 ])

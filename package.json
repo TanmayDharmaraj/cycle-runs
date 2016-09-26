@@ -1,5 +1,5 @@
 {
-  "name": "04",
+  "name": "CycleRuns",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack-dev-server --hot --inline"
   },
-  "author": "",
+  "author": "Tanmay Dharmaraj",
   "license": "ISC",
   "dependencies": {
     "@cycle/core": "^7.0.0",
